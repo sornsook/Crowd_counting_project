@@ -1,0 +1,187 @@
+import numpy as np
+
+import keras
+from keras.models import Sequential
+from keras.layers import Input,Flatten, Conv2D, MaxPooling2D,UpSampling2D,add, concatenate
+from keras.layers.convolutional import Convolution2D
+from keras.layers.core import Dropout, Activation
+from keras.layers.pooling import GlobalAveragePooling2D
+from keras.models import Model
+from keras.applications.vgg16 import VGG16
+from keras import optimizers
+
+def MCNN(pretrained_weights = None,input_size = (480,640,3)):
+    inputs = Input(input_size)
+    # Column 1
+    conv1_1 = Conv2D(16, (9, 9), activation='relu', padding='same',trainable = True)(inputs)
+    pool1_1 = MaxPooling2D(pool_size=(2, 2))(conv1_1)
+    conv1_2 = Conv2D(32, (7, 7), activation='relu', padding='same',trainable = True)(pool1_1)
+    pool1_2 = MaxPooling2D(pool_size=(2, 2))(conv1_2)
+    conv1_3 = Conv2D(16, (7, 7), activation='relu', padding='same',trainable = True)(pool1_2)
+    pool1_3 = MaxPooling2D(pool_size=(2, 2))(conv1_3)
+    conv1_4 = Conv2D(8, (7, 7), activation='relu', padding='same',trainable = True)(pool1_3)
+    
+    # Column 2
+    conv2_1 = Conv2D(20, (7, 7), activation='relu', padding='same',trainable = True)(inputs)
+    pool2_1 = MaxPooling2D(pool_size=(2, 2))(conv2_1)
+    conv2_2 = Conv2D(40, (5, 5), activation='relu', padding='same',trainable = True)(pool2_1)
+    pool2_2 = MaxPooling2D(pool_size=(2, 2))(conv2_2)
+    conv2_3 = Conv2D(20, (5, 5), activation='relu', padding='same',trainable = True)(pool2_2)
+    pool2_3 = MaxPooling2D(pool_size=(2, 2))(conv2_3)
+    conv2_4 = Conv2D(10, (5, 5), activation='relu', padding='same',trainable = True)(pool2_3)
+    
+    # # Column 3
+    conv3_1 = Conv2D(24, (5, 5), activation='relu', padding='same',trainable = True)(inputs)
+    pool3_1 = MaxPooling2D(pool_size=(2, 2))(conv3_1)
+    conv3_2 = Conv2D(48, (3, 3), activation='relu', padding='same',trainable = True)(pool3_1)
+    pool3_2 = MaxPooling2D(pool_size=(2, 2))(conv3_2)
+    conv3_3 = Conv2D(24, (3, 3), activation='relu', padding='same',trainable = True)(pool3_2)
+    pool3_3 = MaxPooling2D(pool_size=(2, 2))(conv3_3)
+    conv3_4 = Conv2D(12, (3, 3), activation='relu', padding='same',trainable = True)(pool3_3)
+
+    # Merged feature maps
+    concat_layer = concatenate([conv1_4, conv2_4])
+    concat_layer = concatenate([concat_layer, conv3_4])
+
+    # 
+    layer_final = Conv2D(1, (1, 1), activation='linear')(concat_layer)
+    layer_final = UpSampling2D((2, 2))(layer_final)
+    layer_final = UpSampling2D((2, 2))(layer_final)
+    layer_final = UpSampling2D((2, 2))(layer_final)
+
+    model = Model(input = inputs, output = layer_final)
+    model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
+
+    if(pretrained_weights):
+    	model.load_weights(pretrained_weights)
+
+    return model
+
+def SCNN(pretrained_weights = None,input_size = (480,640,3)):
+    inputs = Input(input_size)
+
+    conv2_1 = Conv2D(20, (7, 7), activation='relu', padding='same')(inputs)
+    pool2_1 = MaxPooling2D(pool_size=(2, 2))(conv2_1)
+    conv2_2 = Conv2D(40, (5, 5), activation='relu', padding='same')(pool2_1)
+    pool2_2 = MaxPooling2D(pool_size=(2, 2))(conv2_2)
+    conv2_3 = Conv2D(20, (5, 5), activation='relu', padding='same')(pool2_2)
+    pool2_3 = MaxPooling2D(pool_size=(2, 2))(conv2_3)
+    conv2_4 = Conv2D(10, (5, 5), activation='relu', padding='same')(pool2_3)
+    pool2_4 = MaxPooling2D(pool_size=(2,2))(conv2_4)
+    
+    up3_1 = UpSampling2D((2, 2))(conv2_2)
+    layer_inter_1 = Conv2D(1, (1, 1), activation='linear')(up3_1)
+
+    up4_1 = UpSampling2D((2, 2))(conv2_3)
+    up4_2 = UpSampling2D((2, 2))(up4_1)
+    layer_inter_2 = Conv2D(1, (1, 1), activation='linear')(up4_2)
+
+    up5_1 = UpSampling2D((2, 2))(conv2_4)
+    up5_2 = UpSampling2D((2, 2))(up5_1)
+    up5_3 = UpSampling2D((2, 2))(up5_2)
+    
+    layer_inter_3 = Conv2D(1, (1, 1), activation='linear')(up5_3)
+    layer_final = layer_inter_1+layer_inter_2+layer_inter_3
+
+
+    model = Model(input = inputs, output = layer_final)
+    model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
+
+    if(pretrained_weights):
+    	model.load_weights(pretrained_weights)
+
+    return model
+    
+def VGG16(pretrained_weights = None,input_size = (480,640,3)):
+    inputs = Input(input_size)
+    
+    # VGG
+    conv1_1 = Conv2D(64, (3, 3), activation='relu', padding='same')(inputs)
+    conv1_2 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv1_1)
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1_2)
+    conv2_1 = Conv2D(128, (3, 3), activation='relu', padding='same')(pool1)
+    conv2_2 = Conv2D(128, (3, 3), activation='relu', padding='same')(conv2_1)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2_2)
+    conv3_1 = Conv2D(256, (3, 3), activation='relu', padding='same')(pool2)
+    conv3_2 = Conv2D(256, (3, 3), activation='relu', padding='same')(conv3_1)
+    conv3_3 = Conv2D(256, (3, 3), activation='relu', padding='same')(conv3_2)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv3_3)
+    conv4_1 = Conv2D(512, (3, 3), activation='relu', padding='same')(pool2)
+    conv4_2 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv4_1)
+    conv4_3 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv4_2)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv4_3)
+    conv5_1 = Conv2D(512, (3, 3), activation='relu', padding='same')(pool2)
+    conv5_2 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv5_1)
+    conv5_3 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv5_2)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv5_3)
+    
+    
+    up1 = UpSampling2D((2, 2))(pool2)
+    #conv4_1 = Conv2D(40, (5, 5), activation='relu', padding='same')(up1)
+    up2 = UpSampling2D((2, 2))(up1)
+    up3 = UpSampling2D((2, 2))(up2)
+    up4 = UpSampling2D((2, 2))(up3)
+    up5 = UpSampling2D((2, 2))(up4)
+    #conv5_1 = Conv2D(20, (7, 7), activation='relu', padding='same')(up2)
+    layer_final = Conv2D(1, (1, 1), activation='linear')(up5)
+    
+    model = Model(input = inputs, output = layer_final)
+    model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
+
+    if(pretrained_weights):
+    	model.load_weights(pretrained_weights)
+
+    return model
+
+def unet(pretrained_weights = None,input_size = (480,640,3)):
+    inputs = Input(input_size)
+    conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(inputs)
+    conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv1)
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+    conv2 = Conv2D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(pool1)
+    conv2 = Conv2D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv2)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+    conv3 = Conv2D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(pool2)
+    conv3 = Conv2D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv3)
+    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+    conv4 = Conv2D(512, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(pool3)
+    conv4 = Conv2D(512, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv4)
+    drop4 = Dropout(0.5)(conv4)
+    pool4 = MaxPooling2D(pool_size=(2, 2))(drop4)
+
+    conv5 = Conv2D(1024, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(pool4)
+    conv5 = Conv2D(1024, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv5)
+    drop5 = Dropout(0.5)(conv5)
+
+    up6 = Conv2D(512, 2, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(drop5))
+    merge6 = concatenate([drop4,up6], axis = 3)
+    conv6 = Conv2D(512, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(merge6)
+    conv6 = Conv2D(512, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv6)
+
+    up7 = Conv2D(256, 2, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv6))
+    merge7 = concatenate([conv3,up7], axis = 3)
+    conv7 = Conv2D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(merge7)
+    conv7 = Conv2D(256, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv7)
+
+    up8 = Conv2D(128, 2, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv7))
+    merge8 = concatenate([conv2,up8], axis = 3)
+    conv8 = Conv2D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(merge8)
+    conv8 = Conv2D(128, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv8)
+
+    up9 = Conv2D(64, 2, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv8))
+    merge9 = concatenate([conv1,up9], axis = 3)
+    conv9 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(merge9)
+    conv9 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
+    conv9 = Conv2D(2, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
+    conv10 = Conv2D(1, 1, activation = 'sigmoid')(conv9)
+
+    model = Model(input = inputs, output = conv10)
+
+#    model.compile(optimizer = optimizers.Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
+    model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
+#    model.summary()
+
+    if(pretrained_weights):
+    	model.load_weights(pretrained_weights)
+
+    return model
