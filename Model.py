@@ -316,7 +316,7 @@ def CrowdNet():
 
     sgd = SGD(lr = 1e-7, decay = (5*1e-4), momentum = 0.95)
 #    model.compile(optimizer=sgd, loss=euclidean_distance_loss, metrics=['mse'])
-    model.compile(optimizer=sgd, loss='mse', metrics=['mae'])
+    model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
 #    model = init_weights_vgg(model)
 
 
