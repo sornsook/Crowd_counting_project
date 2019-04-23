@@ -2,7 +2,7 @@ import numpy as np
 
 import keras
 from keras.models import Sequential
-from keras.layers import Input,Flatten, Conv2D, MaxPooling2D,UpSampling2D,add, concatenate
+from keras.layers import Input,Flatten, Conv2D, MaxPooling2D,UpSampling2D,add, Concatenate
 from keras.layers.convolutional import Convolution2D
 from keras.layers.core import Dropout, Activation
 from keras.layers.pooling import GlobalAveragePooling2D
@@ -10,8 +10,47 @@ from keras.models import Model
 from keras.applications.vgg16 import VGG16
 from keras import optimizers
 
+from keras.initializers import RandomNormal
+from keras.layers.normalization import BatchNormalization
+from keras.optimizers import SGD
+
 def MCNN(pretrained_weights = None,input_size = (480,640,3)):
     inputs = Input(input_size)
+
+    # Column m
+    conv_m = Conv2D(20, (7,7),padding='same',activation='relu',trainable=True)(inputs)
+    conv_m = MaxPooling2D(pool_size=(2,2))(conv_m)
+    conv_m = (conv_m)
+    conv_m = MaxPooling2D(pool_size = (2, 2))(conv_m)
+    conv_m = Conv2D(20, (5,5),padding = 'same', activation = 'relu',trainable=True)(conv_m)
+    conv_m = Conv2D(10, (5,5),padding = 'same', activation = 'relu',trainable=True)(conv_m)
+    #conv_m = Conv2D(1, (1, 1), padding = 'same', activation = 'relu')(conv_m)
+
+    # Column s
+    conv_s = Conv2D(24, (5,5),padding = 'same', activation = 'relu',trainable=True)(inputs)
+    conv_s = MaxPooling2D(pool_size = (2, 2))(conv_s)
+    conv_s = (conv_s)
+    conv_s = Conv2D(48, (3,3),padding = 'same', activation = 'relu',trainable=True)(conv_s)
+    conv_s = MaxPooling2D(pool_size = (2,2))(conv_s)
+    conv_s = Conv2D(24, (3,3),padding = 'same', activation = 'relu',trainable=True)(conv_s)
+    conv_s = Conv2D(12, (3,3),padding = 'same', activation = 'relu',trainable=True)(conv_s)
+    #conv_s = Conv2D(1, (1, 1), padding = 'same', activation = 'relu')(conv_s)
+
+    # Column L
+    conv_l = Conv2D(16, (9, 9), padding = 'same', activation = 'relu',trainable=True)(inputs)
+    conv_l = MaxPooling2D(pool_size = (2, 2))(conv_l)
+    conv_l = (conv_l)
+    conv_l = Conv2D(32, (7, 7), padding = 'same', activation = 'relu',trainable=True)(conv_l)
+    conv_l = MaxPooling2D(pool_size = (2, 2))(conv_l)
+    conv_l = Conv2D(16, (7, 7), padding = 'same', activation = 'relu',trainable=True)(conv_l)
+    conv_l = Conv2D(8, (7, 7), padding = 'same', activation = 'relu',trainable=True)(conv_l)
+    #conv_l = Conv2D(1, (1, 1), padding = 'same', activation = 'relu')(conv_l)
+
+    conv_merge = Concatenate(axis = 3)([conv_m, conv_s, conv_l])
+    result = Conv2D(1, (1, 1), padding = 'same')(conv_merge)
+    result = UpSampling2D((2, 2))(result)
+    result = UpSampling2D((2, 2))(result)
+    '''
     # Column 1
     conv1_1 = Conv2D(16, (9, 9), activation='relu', padding='same',trainable = True)(inputs)
     pool1_1 = MaxPooling2D(pool_size=(2, 2))(conv1_1)
@@ -20,7 +59,7 @@ def MCNN(pretrained_weights = None,input_size = (480,640,3)):
     conv1_3 = Conv2D(16, (7, 7), activation='relu', padding='same',trainable = True)(pool1_2)
     pool1_3 = MaxPooling2D(pool_size=(2, 2))(conv1_3)
     conv1_4 = Conv2D(8, (7, 7), activation='relu', padding='same',trainable = True)(pool1_3)
-    
+
     # Column 2
     conv2_1 = Conv2D(20, (7, 7), activation='relu', padding='same',trainable = True)(inputs)
     pool2_1 = MaxPooling2D(pool_size=(2, 2))(conv2_1)
@@ -29,7 +68,7 @@ def MCNN(pretrained_weights = None,input_size = (480,640,3)):
     conv2_3 = Conv2D(20, (5, 5), activation='relu', padding='same',trainable = True)(pool2_2)
     pool2_3 = MaxPooling2D(pool_size=(2, 2))(conv2_3)
     conv2_4 = Conv2D(10, (5, 5), activation='relu', padding='same',trainable = True)(pool2_3)
-    
+
     # # Column 3
     conv3_1 = Conv2D(24, (5, 5), activation='relu', padding='same',trainable = True)(inputs)
     pool3_1 = MaxPooling2D(pool_size=(2, 2))(conv3_1)
@@ -43,19 +82,22 @@ def MCNN(pretrained_weights = None,input_size = (480,640,3)):
     concat_layer = concatenate([conv1_4, conv2_4])
     concat_layer = concatenate([concat_layer, conv3_4])
 
-    # 
+    #
     layer_final = Conv2D(1, (1, 1), activation='linear')(concat_layer)
     layer_final = UpSampling2D((2, 2))(layer_final)
     layer_final = UpSampling2D((2, 2))(layer_final)
     layer_final = UpSampling2D((2, 2))(layer_final)
-
-    model = Model(input = inputs, output = layer_final)
+    '''
+    model = Model(input = inputs, output = result)
     model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
 
     if(pretrained_weights):
     	model.load_weights(pretrained_weights)
 
-    return model
+
+    model_name = 'MCNN'
+
+    return model,model_name
 
 def SCNN(pretrained_weights = None,input_size = (480,640,3)):
     inputs = Input(input_size)
@@ -68,7 +110,7 @@ def SCNN(pretrained_weights = None,input_size = (480,640,3)):
     pool2_3 = MaxPooling2D(pool_size=(2, 2))(conv2_3)
     conv2_4 = Conv2D(10, (5, 5), activation='relu', padding='same')(pool2_3)
     pool2_4 = MaxPooling2D(pool_size=(2,2))(conv2_4)
-    
+
     up3_1 = UpSampling2D((2, 2))(conv2_2)
     layer_inter_1 = Conv2D(1, (1, 1), activation='linear')(up3_1)
 
@@ -79,7 +121,7 @@ def SCNN(pretrained_weights = None,input_size = (480,640,3)):
     up5_1 = UpSampling2D((2, 2))(conv2_4)
     up5_2 = UpSampling2D((2, 2))(up5_1)
     up5_3 = UpSampling2D((2, 2))(up5_2)
-    
+
     layer_inter_3 = Conv2D(1, (1, 1), activation='linear')(up5_3)
     layer_final = layer_inter_1+layer_inter_2+layer_inter_3
 
@@ -90,11 +132,14 @@ def SCNN(pretrained_weights = None,input_size = (480,640,3)):
     if(pretrained_weights):
     	model.load_weights(pretrained_weights)
 
-    return model
-    
+
+    model_name = 'Single_column'
+
+    return model,model_name
+
 def VGG16(pretrained_weights = None,input_size = (480,640,3)):
     inputs = Input(input_size)
-    
+
     # VGG
     conv1_1 = Conv2D(64, (3, 3), activation='relu', padding='same')(inputs)
     conv1_2 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv1_1)
@@ -114,8 +159,8 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
     conv5_2 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv5_1)
     conv5_3 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv5_2)
     pool2 = MaxPooling2D(pool_size=(2, 2))(conv5_3)
-    
-    
+
+
     up1 = UpSampling2D((2, 2))(pool2)
     #conv4_1 = Conv2D(40, (5, 5), activation='relu', padding='same')(up1)
     up2 = UpSampling2D((2, 2))(up1)
@@ -124,14 +169,17 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
     up5 = UpSampling2D((2, 2))(up4)
     #conv5_1 = Conv2D(20, (7, 7), activation='relu', padding='same')(up2)
     layer_final = Conv2D(1, (1, 1), activation='linear')(up5)
-    
+
     model = Model(input = inputs, output = layer_final)
     model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
 
     if(pretrained_weights):
     	model.load_weights(pretrained_weights)
 
-    return model
+    model_name = 'VGG16'
+
+
+    return model,model_name
 
 def unet(pretrained_weights = None,input_size = (480,640,3)):
     inputs = Input(input_size)
@@ -184,4 +232,95 @@ def unet(pretrained_weights = None,input_size = (480,640,3)):
     if(pretrained_weights):
     	model.load_weights(pretrained_weights)
 
-    return model
+    model_name = 'U_net'
+    return model, model_name
+
+
+
+#############################################################################################################
+# Neural network model : VGG + Conv
+#
+def CrowdNet():
+    #Variable Input Size
+#    rows = None
+#    cols = None
+
+    rows = 480
+    cols = 640
+
+    #Batch Normalisation option
+
+    batch_norm = 0
+    kernel = (3, 3)
+    init = RandomNormal(stddev=0.01)
+    model = Sequential()
+
+    #custom VGG:
+
+    if(batch_norm):
+        model.add(Conv2D(64, kernel_size = kernel, input_shape = (rows,cols,3),activation = 'relu', padding='same'))
+        model.add(BatchNormalization())
+        model.add(Conv2D(64, kernel_size = kernel,activation = 'relu', padding='same'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(strides=2))
+        model.add(Conv2D(128,kernel_size = kernel, activation = 'relu', padding='same'))
+        model.add(BatchNormalization())
+        model.add(Conv2D(128,kernel_size = kernel, activation = 'relu', padding='same'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(strides=2))
+        model.add(Conv2D(256,kernel_size = kernel, activation = 'relu', padding='same'))
+        model.add(BatchNormalization())
+        model.add(Conv2D(256,kernel_size = kernel, activation = 'relu', padding='same'))
+        model.add(BatchNormalization())
+        model.add(Conv2D(256,kernel_size = kernel, activation = 'relu', padding='same'))
+        model.add(BatchNormalization())
+        model.add(MaxPooling2D(strides=2))
+        model.add(Conv2D(512, kernel_size = kernel,activation = 'relu', padding='same'))
+        model.add(BatchNormalization())
+        model.add(Conv2D(512, kernel_size = kernel,activation = 'relu', padding='same'))
+        model.add(BatchNormalization())
+        model.add(Conv2D(512, kernel_size = kernel,activation = 'relu', padding='same'))
+        model.add(BatchNormalization())
+
+    else:
+        model.add(Conv2D(64, kernel_size = kernel,activation = 'relu', padding='same',input_shape = (rows, cols, 3), kernel_initializer = init))
+        model.add(Conv2D(64, kernel_size = kernel,activation = 'relu', padding='same', kernel_initializer = init))
+        model.add(MaxPooling2D(strides=2))
+        model.add(Conv2D(128,kernel_size = kernel, activation = 'relu', padding='same', kernel_initializer = init))
+        model.add(Conv2D(128,kernel_size = kernel, activation = 'relu', padding='same', kernel_initializer = init))
+        model.add(MaxPooling2D(strides=2))
+        model.add(Conv2D(256,kernel_size = kernel, activation = 'relu', padding='same', kernel_initializer = init))
+        model.add(Conv2D(256,kernel_size = kernel, activation = 'relu', padding='same', kernel_initializer = init))
+        model.add(Conv2D(256,kernel_size = kernel, activation = 'relu', padding='same', kernel_initializer = init))
+        model.add(MaxPooling2D(strides=2))
+        model.add(Conv2D(512, kernel_size = kernel,activation = 'relu', padding='same', kernel_initializer = init))
+        model.add(Conv2D(512, kernel_size = kernel,activation = 'relu', padding='same', kernel_initializer = init))
+        model.add(Conv2D(512, kernel_size = kernel,activation = 'relu', padding='same', kernel_initializer = init))
+
+
+
+
+    #Conv2D
+    model.add(Conv2D(512, (3, 3), activation='relu', dilation_rate = 2, kernel_initializer = init, padding = 'same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', dilation_rate = 2, kernel_initializer = init, padding = 'same'))
+    model.add(Conv2D(512, (3, 3), activation='relu', dilation_rate = 2, kernel_initializer = init, padding = 'same'))
+    model.add(Conv2D(256, (3, 3), activation='relu', dilation_rate = 2, kernel_initializer = init, padding = 'same'))
+    model.add(Conv2D(128, (3, 3), activation='relu', dilation_rate = 2, kernel_initializer = init, padding = 'same'))
+    model.add(Conv2D(64, (3, 3), activation='relu', dilation_rate = 2, kernel_initializer = init, padding = 'same'))
+    model.add(Conv2D(1, (1, 1), activation='relu', dilation_rate = 1, kernel_initializer = init, padding = 'same'))
+
+    #Upsampling
+    model.add(UpSampling2D((2, 2)))
+    model.add(UpSampling2D((2, 2)))
+    model.add(UpSampling2D((2, 2)))
+
+    sgd = SGD(lr = 1e-7, decay = (5*1e-4), momentum = 0.95)
+#    model.compile(optimizer=sgd, loss=euclidean_distance_loss, metrics=['mse'])
+    model.compile(optimizer=sgd, loss='mse', metrics=['mae'])
+#    model = init_weights_vgg(model)
+
+
+    #### Naming this model
+    model_name = 'CrowdNet'
+
+    return model,model_name
