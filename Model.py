@@ -2,7 +2,7 @@ import numpy as np
 
 import keras
 from keras.models import Sequential
-from keras.layers import Input,Flatten, Conv2D, MaxPooling2D,UpSampling2D,add, Concatenate concatenate
+from keras.layers import Input,Flatten, Conv2D, MaxPooling2D,UpSampling2D,add, Concatenate, concatenate
 from keras.layers.convolutional import Convolution2D
 from keras.layers.core import Dropout, Activation
 from keras.layers.pooling import GlobalAveragePooling2D
