@@ -14,10 +14,7 @@ from keras.initializers import RandomNormal
 from keras.layers.normalization import BatchNormalization
 from keras.optimizers import SGD
 
-def Unet(pretrained_weights = None,input_size = (480,640,3)):
-    model_name = 'unet'
-    
-    return model_name
+
 
 
 def MCNN(pretrained_weights = None,input_size = (480,640,3)):
