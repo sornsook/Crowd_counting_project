@@ -182,7 +182,7 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
     return model,model_name
 
 
-def unet(pretrained_weights = None,input_size = (480,640,3)):
+def Unet(pretrained_weights = None,input_size = (480,640,3)):
     model_name = 'unet'
     
     return model_name
