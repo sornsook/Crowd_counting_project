@@ -183,7 +183,7 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
 
 def unet(pretrained_weights = None,input_size = (480,640,3)):
 
-    inputs = Input(input_size)
+    #inputs = Input(input_size)
     '''
     # Column m
     conv_m = Conv2D(20, (7,7),padding='same',activation='relu',trainable=True)(inputs)
