@@ -184,6 +184,41 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
 def unet(pretrained_weights = None,input_size = (480,640,3)):
 
     inputs = Input(input_size)
+    # Column m
+    conv_m = Conv2D(20, (7,7),padding='same',activation='relu',trainable=True)(inputs)
+    conv_m = MaxPooling2D(pool_size=(2,2))(conv_m)
+    conv_m = (conv_m)
+    conv_m = MaxPooling2D(pool_size = (2, 2))(conv_m)
+    conv_m = Conv2D(20, (5,5),padding = 'same', activation = 'relu',trainable=True)(conv_m)
+    conv_m = Conv2D(10, (5,5),padding = 'same', activation = 'relu',trainable=True)(conv_m)
+    #conv_m = Conv2D(1, (1, 1), padding = 'same', activation = 'relu')(conv_m)
+
+    # Column s
+    conv_s = Conv2D(24, (5,5),padding = 'same', activation = 'relu',trainable=True)(inputs)
+    conv_s = MaxPooling2D(pool_size = (2, 2))(conv_s)
+    conv_s = (conv_s)
+    conv_s = Conv2D(48, (3,3),padding = 'same', activation = 'relu',trainable=True)(conv_s)
+    conv_s = MaxPooling2D(pool_size = (2,2))(conv_s)
+    conv_s = Conv2D(24, (3,3),padding = 'same', activation = 'relu',trainable=True)(conv_s)
+    conv_s = Conv2D(12, (3,3),padding = 'same', activation = 'relu',trainable=True)(conv_s)
+    #conv_s = Conv2D(1, (1, 1), padding = 'same', activation = 'relu')(conv_s)
+
+    # Column L
+    conv_l = Conv2D(16, (9, 9), padding = 'same', activation = 'relu',trainable=True)(inputs)
+    conv_l = MaxPooling2D(pool_size = (2, 2))(conv_l)
+    conv_l = (conv_l)
+    conv_l = Conv2D(32, (7, 7), padding = 'same', activation = 'relu',trainable=True)(conv_l)
+    conv_l = MaxPooling2D(pool_size = (2, 2))(conv_l)
+    conv_l = Conv2D(16, (7, 7), padding = 'same', activation = 'relu',trainable=True)(conv_l)
+    conv_l = Conv2D(8, (7, 7), padding = 'same', activation = 'relu',trainable=True)(conv_l)
+    #conv_l = Conv2D(1, (1, 1), padding = 'same', activation = 'relu')(conv_l)
+
+    conv_merge = Concatenate(axis = 3)([conv_m, conv_s, conv_l])
+    result = Conv2D(1, (1, 1), padding = 'same')(conv_merge)
+    result = UpSampling2D((2, 2))(result)
+    result = UpSampling2D((2, 2))(result)
+    model = Model(input = inputs, output = result)
+    '''
     conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(inputs)
     conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv1)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
@@ -225,7 +260,7 @@ def unet(pretrained_weights = None,input_size = (480,640,3)):
     conv10 = Conv2D(1, 1, activation = 'sigmoid')(conv9)
     
     model = Model(input = inputs, output = conv10)
-
+    '''
 #    model.compile(optimizer = optimizers.Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
     model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
 #    model.summary()
