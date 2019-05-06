@@ -148,9 +148,9 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
     return model,model_name
 
     
-#def unet(pretrained_weights = None,input_size = (480,640,3)):
+def unet(pretrained_weights = None,input_size = (480,640,3)):
 
-    #inputs = Input(input_size)
+    inputs = Input(input_size)
     '''
     # Column m
     conv_m = Conv2D(20, (7,7),padding='same',activation='relu',trainable=True)(inputs)
@@ -186,7 +186,7 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
     result = UpSampling2D((2, 2))(result)
     result = UpSampling2D((2, 2))(result)
     model = Model(input = inputs, output = result)
-    
+    '''
     conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(inputs)
     conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv1)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
@@ -228,16 +228,16 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
     conv10 = Conv2D(1, 1, activation = 'sigmoid')(conv9)
     
     model = Model(input = inputs, output = conv10)
-    '''
-#    model.compile(optimizer = optimizers.Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
+    
+    model.compile(optimizer = optimizers.Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
 #    model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
-#    model.summary()
+    model.summary()
 
-#    if(pretrained_weights):
-#    	model.load_weights(pretrained_weights)
+    if(pretrained_weights):
+    	model.load_weights(pretrained_weights)
 
-#    model_name = 'U_net'
-#    return  model_name
+    model_name = 'U_net'
+    return  model,model_name
 
 
 
