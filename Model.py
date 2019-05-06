@@ -183,7 +183,7 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
 
 def unet(pretrained_weights = None,input_size = (480,640,3)):
     
-    inputs = Input(input)
+    inputs = Input(input_size)
     conv1_1 = Conv2D(64, (3, 3), activation='relu', padding='same')(inputs)
     conv1_2 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv1_1)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1_2)
