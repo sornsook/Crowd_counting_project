@@ -262,16 +262,50 @@ def CrowdNet():
 
     rows = 480
     cols = 640
-
+    
+    input_size = (480,640)
+    inputs = Input(input_size)
+    conv1_1 = Conv2D(64, (3, 3), activation='relu', padding='same')(inputs)
+    conv1_2 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv1_1)
+    pool1   = MaxPooling2D(pool_size=(2,2))(conv1_2)
+    
+    conv2_1 = Conv2D(128,(3, 3), activation='relu', padding='same')(pool1)
+    conv2_2 = Conv2D(128,(3, 3), activation='relu', padding='same')(conv2_1)
+    pool2   = MaxPooling2D(pool_size=(2,2))(conv2_2)
+    
+    conv3_1 = Conv2D(256,(3, 3), activation='relu', padding='same')(pool2)
+    conv3_2 = Conv2D(256,(3, 3), activation='relu', padding='same')(conv3_1)
+    conv3_3 = Conv2D(256,(3, 3), activation='relu', padding='same')(conv3_2)
+    pool3   = MaxPooling2D(pool_size=(2,2))(conv3_3)
+    
+    conv4_1 = Conv2D(512,(3, 3), activation='relu', padding='same')(pool3)
+    conv4_2 = Conv2D(512,(3, 3), activation='relu', padding='same')(conv4_1)
+    conv4_3 = Conv2D(512,(3, 3), activation='relu', padding='same')(conv4_2)
+    pool4   = MaxPooling2D(pool_size=(2,2))(conv4_3)
+    
+    up1 = UpSampling2D((2,2))(pool4)
+    up2 = UpSampling2D((2,2))(up1)
+    up3 = UpSampling2D((2,2))(up2)
+    up4 = UpSampling2D((2,2))(up3)
+    
+    conv5_1 = Conv2D(512,(3, 3), activation='relu',dilation_rate = 2, padding='same')(up4)
+    conv5_2 = Conv2D(512,(3, 3), activation='relu',dilation_rate = 2,padding='same')(conv5_1)
+    conv5_3 = Conv2D(512,(3, 3), activation='relu',dilation_rate = 2,padding='same')(conv5_2)
+    conv5_4 = Conv2D(256,(3, 3), activation='relu',dilation_rate = 2,padding='same')(conv5_3)
+    conv5_5 = Conv2D(128,(3, 3), activation='relu',dilation_rate = 2, padding='same')(conv5_4)
+    conv5_6 = Conv2D(64 ,(3, 3), activation='relu',dilation_rate = 2, padding='same')(conv5_5)
+    layer_final = Conv2D(1  ,(3, 3), activation='linear',dilation_rate = 2, padding='same')(conv5_6)
+    
+    model = Model(input = inputs, output = layer_final)
     #Batch Normalisation option
-
+    '''
     batch_norm = 0
     kernel = (3, 3)
     init = RandomNormal(stddev=0.01)
     model = Sequential()
 
     #custom VGG:
-
+    
     if(batch_norm):
         model.add(Conv2D(64, kernel_size = kernel, input_shape = (rows,cols,3),activation = 'relu', padding='same'))
         model.add(BatchNormalization())
@@ -328,7 +362,7 @@ def CrowdNet():
     model.add(UpSampling2D((2, 2)))
     model.add(UpSampling2D((2, 2)))
     model.add(UpSampling2D((2, 2)))
-
+    '''
     sgd = SGD(lr = 1e-7, decay = (5*1e-4), momentum = 0.95)
 #    model.compile(optimizer=sgd, loss=euclidean_distance_loss, metrics=['mse'])
     model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
