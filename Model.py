@@ -181,7 +181,13 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
 
     return model,model_name
 
+
 def unet(pretrained_weights = None,input_size = (480,640,3)):
+    model_name = 'unet'
+    
+    return model_name
+    
+#def unet(pretrained_weights = None,input_size = (480,640,3)):
 
     #inputs = Input(input_size)
     '''
@@ -269,8 +275,8 @@ def unet(pretrained_weights = None,input_size = (480,640,3)):
 #    if(pretrained_weights):
 #    	model.load_weights(pretrained_weights)
 
-    model_name = 'U_net'
-    return  model_name
+#    model_name = 'U_net'
+#    return  model_name
 
 
 
