@@ -151,41 +151,52 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
 def unet(pretrained_weights = None,input_size = (480,640,3)):
 
     inputs = Input(input_size)
-    '''
-    # Column m
-    conv_m = Conv2D(20, (7,7),padding='same',activation='relu',trainable=True)(inputs)
-    conv_m = MaxPooling2D(pool_size=(2,2))(conv_m)
-    conv_m = (conv_m)
-    conv_m = MaxPooling2D(pool_size = (2, 2))(conv_m)
-    conv_m = Conv2D(20, (5,5),padding = 'same', activation = 'relu',trainable=True)(conv_m)
-    conv_m = Conv2D(10, (5,5),padding = 'same', activation = 'relu',trainable=True)(conv_m)
-    #conv_m = Conv2D(1, (1, 1), padding = 'same', activation = 'relu')(conv_m)
-
-    # Column s
-    conv_s = Conv2D(24, (5,5),padding = 'same', activation = 'relu',trainable=True)(inputs)
-    conv_s = MaxPooling2D(pool_size = (2, 2))(conv_s)
-    conv_s = (conv_s)
-    conv_s = Conv2D(48, (3,3),padding = 'same', activation = 'relu',trainable=True)(conv_s)
-    conv_s = MaxPooling2D(pool_size = (2,2))(conv_s)
-    conv_s = Conv2D(24, (3,3),padding = 'same', activation = 'relu',trainable=True)(conv_s)
-    conv_s = Conv2D(12, (3,3),padding = 'same', activation = 'relu',trainable=True)(conv_s)
-    #conv_s = Conv2D(1, (1, 1), padding = 'same', activation = 'relu')(conv_s)
-
-    # Column L
-    conv_l = Conv2D(16, (9, 9), padding = 'same', activation = 'relu',trainable=True)(inputs)
-    conv_l = MaxPooling2D(pool_size = (2, 2))(conv_l)
-    conv_l = (conv_l)
-    conv_l = Conv2D(32, (7, 7), padding = 'same', activation = 'relu',trainable=True)(conv_l)
-    conv_l = MaxPooling2D(pool_size = (2, 2))(conv_l)
-    conv_l = Conv2D(16, (7, 7), padding = 'same', activation = 'relu',trainable=True)(conv_l)
-    conv_l = Conv2D(8, (7, 7), padding = 'same', activation = 'relu',trainable=True)(conv_l)
-    #conv_l = Conv2D(1, (1, 1), padding = 'same', activation = 'relu')(conv_l)
-
-    conv_merge = Concatenate(axis = 3)([conv_m, conv_s, conv_l])
-    result = Conv2D(1, (1, 1), padding = 'same')(conv_merge)
-    result = UpSampling2D((2, 2))(result)
-    result = UpSampling2D((2, 2))(result)
-    model = Model(input = inputs, output = result)
+    
+    conv1_1 = Conv2D(64, (3, 3), activation='relu', padding='same')(inputs)
+    conv1_2 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv1_1)
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1_2)
+    
+    conv2_1 = Conv2D(128, (3, 3), activation='relu', padding='same')(pool1)
+    conv2_2 = Conv2D(128, (3, 3), activation='relu', padding='same')(conv2_1)
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2_2)
+    
+    conv3_1 = Conv2D(256, (3, 3), activation='relu', padding='same')(pool2)
+    conv3_2 = Conv2D(256, (3, 3), activation='relu', padding='same')(conv3_1)
+    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3_2)
+    
+    conv4_1 = Conv2D(512, (3, 3), activation='relu', padding='same')(pool3)
+    conv4_2 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv4_1)
+    pool4 = MaxPooling2D(pool_size=(2, 2))(conv4_2)
+    
+    conv5_1 = Conv2D(1024, (3, 3), activation='relu', padding='same')(pool4)
+    conv5_2 = Conv2D(1024, (3, 3), activation='relu', padding='same')(conv5_1)
+    
+    up6 = Conv2D(512, 2, activation = 'relu', padding = 'same')(UpSampling2D(size = (2,2))(conv5_2))
+    up6 = concatenate([conv4_2,up6], axis = 3)
+    
+    conv6_1 = Conv2D(512, (3, 3), activation='relu', padding='same')(up6)
+    conv6_2 = Conv2D(512, (3, 3), activation='relu', padding='same')(conv6_1)
+    
+#    up7 = concatenate([Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(conv6_2), conv3_2], axis=3)
+    up7 = Conv2D(256, 2, activation = 'relu', padding = 'same')(UpSampling2D(size = (2,2))(conv6_2))
+    up7 = concatenate([conv3_2,up7], axis = 3)
+    conv7_1 = Conv2D(256, (3, 3), activation='relu', padding='same')(up7)
+    conv7_2 = Conv2D(256, (3, 3), activation='relu', padding='same')(conv7_1)
+    
+#    up8 = concatenate([Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(conv7_2), conv2_2], axis=3)
+    up8 = Conv2D(128, 2, activation = 'relu', padding = 'same')(UpSampling2D(size = (2,2))(conv7_2))
+    up8 = concatenate([conv2_2,up8], axis = 3)
+    conv8_1 = Conv2D(128, (3, 3), activation='relu', padding='same')(up8)
+    conv8_2 = Conv2D(128, (3, 3), activation='relu', padding='same')(conv8_1)
+    
+#    up9 = concatenate([Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(conv8_2), conv1_2], axis=3)
+    up9 = Conv2D(64, 2, activation = 'relu', padding = 'same')(UpSampling2D(size = (2,2))(conv8_2))
+    up9 = concatenate([conv1_2,up9], axis = 3)
+    conv9_1 = Conv2D(64, (3, 3), activation='relu', padding='same')(up9)
+    conv9_2 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv9_1)
+    
+    conv10 = Conv2D(1, (1, 1), activation='linear')(conv9_2)
+    
     '''
     conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(inputs)
     conv1 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv1)
@@ -226,7 +237,7 @@ def unet(pretrained_weights = None,input_size = (480,640,3)):
     conv9 = Conv2D(64, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
     conv9 = Conv2D(2, 3, activation = 'relu', padding = 'same', kernel_initializer = 'he_normal')(conv9)
     conv10 = Conv2D(1, 1, activation = 'sigmoid')(conv9)
-    
+    '''
     model = Model(input = inputs, output = conv10)
     
     model.compile(optimizer = optimizers.Adam(lr = 1e-4), loss = 'binary_crossentropy', metrics = ['accuracy'])
