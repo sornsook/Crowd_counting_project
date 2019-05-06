@@ -14,6 +14,12 @@ from keras.initializers import RandomNormal
 from keras.layers.normalization import BatchNormalization
 from keras.optimizers import SGD
 
+def Unet(pretrained_weights = None,input_size = (480,640,3)):
+    model_name = 'unet'
+    
+    return model_name
+
+
 def MCNN(pretrained_weights = None,input_size = (480,640,3)):
     inputs = Input(input_size)
 
@@ -50,44 +56,7 @@ def MCNN(pretrained_weights = None,input_size = (480,640,3)):
     result = Conv2D(1, (1, 1), padding = 'same')(conv_merge)
     result = UpSampling2D((2, 2))(result)
     result = UpSampling2D((2, 2))(result)
-    '''
-    # Column 1
-    conv1_1 = Conv2D(16, (9, 9), activation='relu', padding='same',trainable = True)(inputs)
-    pool1_1 = MaxPooling2D(pool_size=(2, 2))(conv1_1)
-    conv1_2 = Conv2D(32, (7, 7), activation='relu', padding='same',trainable = True)(pool1_1)
-    pool1_2 = MaxPooling2D(pool_size=(2, 2))(conv1_2)
-    conv1_3 = Conv2D(16, (7, 7), activation='relu', padding='same',trainable = True)(pool1_2)
-    pool1_3 = MaxPooling2D(pool_size=(2, 2))(conv1_3)
-    conv1_4 = Conv2D(8, (7, 7), activation='relu', padding='same',trainable = True)(pool1_3)
 
-    # Column 2
-    conv2_1 = Conv2D(20, (7, 7), activation='relu', padding='same',trainable = True)(inputs)
-    pool2_1 = MaxPooling2D(pool_size=(2, 2))(conv2_1)
-    conv2_2 = Conv2D(40, (5, 5), activation='relu', padding='same',trainable = True)(pool2_1)
-    pool2_2 = MaxPooling2D(pool_size=(2, 2))(conv2_2)
-    conv2_3 = Conv2D(20, (5, 5), activation='relu', padding='same',trainable = True)(pool2_2)
-    pool2_3 = MaxPooling2D(pool_size=(2, 2))(conv2_3)
-    conv2_4 = Conv2D(10, (5, 5), activation='relu', padding='same',trainable = True)(pool2_3)
-
-    # # Column 3
-    conv3_1 = Conv2D(24, (5, 5), activation='relu', padding='same',trainable = True)(inputs)
-    pool3_1 = MaxPooling2D(pool_size=(2, 2))(conv3_1)
-    conv3_2 = Conv2D(48, (3, 3), activation='relu', padding='same',trainable = True)(pool3_1)
-    pool3_2 = MaxPooling2D(pool_size=(2, 2))(conv3_2)
-    conv3_3 = Conv2D(24, (3, 3), activation='relu', padding='same',trainable = True)(pool3_2)
-    pool3_3 = MaxPooling2D(pool_size=(2, 2))(conv3_3)
-    conv3_4 = Conv2D(12, (3, 3), activation='relu', padding='same',trainable = True)(pool3_3)
-
-    # Merged feature maps
-    concat_layer = concatenate([conv1_4, conv2_4])
-    concat_layer = concatenate([concat_layer, conv3_4])
-
-    #
-    layer_final = Conv2D(1, (1, 1), activation='linear')(concat_layer)
-    layer_final = UpSampling2D((2, 2))(layer_final)
-    layer_final = UpSampling2D((2, 2))(layer_final)
-    layer_final = UpSampling2D((2, 2))(layer_final)
-    '''
     model = Model(input = inputs, output = result)
     model.compile(optimizer=optimizers.Adam(lr=1e-3), loss='mse', metrics=['mae'])
 
@@ -181,11 +150,6 @@ def VGG16(pretrained_weights = None,input_size = (480,640,3)):
 
     return model,model_name
 
-
-def Unet(pretrained_weights = None,input_size = (480,640,3)):
-    model_name = 'unet'
-    
-    return model_name
     
 #def unet(pretrained_weights = None,input_size = (480,640,3)):
 
