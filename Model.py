@@ -263,7 +263,7 @@ def CrowdNet():
     rows = 480
     cols = 640
     
-    input_size = (480,640)
+    input_size = (480,640,3)
     inputs = Input(input_size)
     conv1_1 = Conv2D(64, (3, 3), activation='relu', padding='same')(inputs)
     conv1_2 = Conv2D(64, (3, 3), activation='relu', padding='same')(conv1_1)
