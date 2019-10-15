@@ -146,7 +146,7 @@ def skip_connection (input_size = (480,640,3)):
 
 ##############################################################################################
 def skip_net (input_size = (480,640,3)):
-    factor  = 2
+    factor  = 4
     inputs  = Input(input_size)
     conv_11 = Conv2D(8*factor, (3, 3), activation='relu', padding='same',trainable = True)(inputs)
     conv_12 = Conv2D(8*factor, (3, 3), activation='relu', padding='same',trainable = True)(conv_11)
