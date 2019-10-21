@@ -5,7 +5,7 @@ Created on Thu Sep 05 17:09:21 2019
 @author: SornSook
 """
 
-import keras
+from tensorflow import keras
 from keras.models import Sequential
 from keras.layers import Input,Flatten, Conv2D, MaxPooling2D,UpSampling2D,add, concatenate
 from keras.layers.convolutional import Convolution2D
