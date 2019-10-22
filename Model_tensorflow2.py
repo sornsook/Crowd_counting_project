@@ -9,7 +9,7 @@ def skip_net(input_size = (480,640,3)):
     
     factor = 3
     
-    inputs 	= layers.inputs(shape = input_size)
+    inputs 	= layers.Input(shape = input_size)
     conv_11 = layers.Conv2D(8*factor, (3, 3), activation='relu', padding='same',trainable = True)(inputs)
     conv_12 = layers.Conv2D(8*factor, (3, 3), activation='relu', padding='same',trainable = True)(conv_11)
     conv_13 = layers.Conv2D(8*factor, (3, 3), activation='relu', padding='same',trainable = True)(conv_12)
